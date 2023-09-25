@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "699128640565",
+    "firebase_url": "https://shuttle-stalk-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "shuttle-stalk",
+    "storage_bucket": "shuttle-stalk.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699128640565:android:37f2c51bbde88e76fa2d7c",
+        "android_client_info": {
+          "package_name": "com.example.shuttle_stalk_driver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699128640565-jarvfpbk5a9402jjdkscjdtchvr9i824.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDORZbzYA-UjbN4ftcyjtbFUdAtwz3gsMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699128640565-jarvfpbk5a9402jjdkscjdtchvr9i824.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699128640565-9dqiur509u789cvk9q1chgu09gf4k69r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shuttlestalk.shuttleStalk"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699128640565:android:c08feaedc16b4527fa2d7c",
+        "android_client_info": {
+          "package_name": "com.shuttlestalk.shuttle_stalk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699128640565-jarvfpbk5a9402jjdkscjdtchvr9i824.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDORZbzYA-UjbN4ftcyjtbFUdAtwz3gsMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699128640565-jarvfpbk5a9402jjdkscjdtchvr9i824.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699128640565-9dqiur509u789cvk9q1chgu09gf4k69r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.shuttlestalk.shuttleStalk"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

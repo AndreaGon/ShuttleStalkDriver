@@ -59,8 +59,10 @@ class JourneyVM {
 
       for(final booking in querySnapshot.docs){
         batch.update(booking.reference, { 'is_invalid': true });
-        batch.commit();
+
       }
+
+      await batch.commit();
 
     } catch (e) {
       print(e);

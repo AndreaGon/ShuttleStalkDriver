@@ -111,36 +111,5 @@ class JourneyVM {
     }
   }
 
-  Future sendCancellationNotification() async{
-    var data =  {
-      "title": "Booking Cancellation",
-      "content": "Your booking for route on this date and time has been cancelled by the driver due to the following reasons: reason",
-    };
-
-    var httpClient = new HttpClient();
-    var uri = new Uri.https(API_URL, '/send-notif');
-    var request = await httpClient.postUrl(uri);
-    request.write(data);
-    var response = await request.close();
-    //var responseBody = await response.transform(UTF8.decoder).join();
-    // return responseBody;
-    //
-    // final response = await http.post(
-    //   uri,
-    //   headers: <String, String>{
-    //     'Content-Type': 'application/json; charset=UTF-8',
-    //   },
-    //   body: jsonEncode(data),
-    // );
-    //
-    // if (response.statusCode == 200) {
-    //   // Request was successful, and you can handle the response data here.
-    //   print('Response data: ${response.body}');
-    // } else {
-    //   // Request failed, handle the error here.
-    //   print('Request failed with status code: ${response.statusCode}');
-    // }
-  }
-
 
 }

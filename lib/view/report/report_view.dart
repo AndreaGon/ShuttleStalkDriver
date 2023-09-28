@@ -114,7 +114,7 @@ class _ReportViewState extends State<ReportView> {
                               TextButton(
                                 onPressed: () => {
 
-                                  reportVM.createNotification(dropdownValue, content.text, widget.driverId, widget.routeName).then((value) => {
+                                  reportVM.createNotification(dropdownValue, content.text, widget.driverId, widget.routeName).then((value) async => {
                                     journeyVM.endJourney(widget.journeyId, widget.date, widget.time, widget.routeId).then((value) => {
                                       Navigator.pop(context, 'Yes'),
                                       Navigator.pop(context),
@@ -122,6 +122,11 @@ class _ReportViewState extends State<ReportView> {
                                         content: Text("Successfully cancelled journey and notiifed students and admins"),
                                       )),
                                     }),
+
+                                    reportVM.sendCancellationNotification(widget.date, widget.time, widget.routeName, dropdownValue).then((value) => {
+
+                                    }),
+
 
                                     content.text = ""
                                   })
@@ -131,9 +136,7 @@ class _ReportViewState extends State<ReportView> {
                                     ))
                                   })
 
-                                  // journeyVM.sendCancellationNotification().then((value) => {
-                                  //
-                                  // })
+
 
 
                                 },

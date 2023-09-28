@@ -16,7 +16,7 @@ class _MainViewState extends State<MainView> {
   int selectedIndex = 0;
   List page = [
     HomeView(),
-    ReportView(),
+//    ReportView(),
     ProfileView()
   ];
 

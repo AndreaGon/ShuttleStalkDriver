@@ -16,10 +16,10 @@ class BottomNavLayout extends StatelessWidget {
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bus_alert_rounded),
-            label: 'Report',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.bus_alert_rounded),
+          //   label: 'Report',
+          // ),
           BottomNavigationBarItem(
               icon: Icon(Icons.person),
               label: 'Profile'

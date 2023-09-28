@@ -10,6 +10,7 @@ import 'package:shuttle_stalk_driver/view_model/journey/journey_view_model.dart'
 
 import '../../../res/colors.dart';
 import '../../journey/journey_view.dart';
+import '../../report/report_view.dart';
 
 class JourneyCardLayout extends StatefulWidget {
   String routeName;
@@ -140,6 +141,34 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                     ),
                   )
               )
+              ),
+
+              Visibility(
+                  visible: !widget.isJourneyStarted,
+                  child: Padding(
+                      padding: EdgeInsets.only(bottom: 5, left: 25, right: 20, top: 15),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: 50.0,
+                        child: ElevatedButton(
+                          child: Text("Cancel Journey", style: TextStyle(color: white),),
+                          style: ElevatedButton.styleFrom(
+                            primary: red,
+                            elevation: 0,
+                          ),
+                          onPressed: () async {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName),
+                              ),
+                            ).then((value) => {
+                              refreshState()
+                            });
+                          },
+                        ),
+                      )
+                  )
               ),
 
               Visibility(
@@ -280,5 +309,11 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
+  }
+
+  refreshState(){
+    setState(() {
+      widget.onJourneyPressed();
+    });
   }
 }

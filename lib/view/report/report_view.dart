@@ -13,7 +13,9 @@ class ReportView extends StatefulWidget {
   String driverId;
   String routeName;
 
-  ReportView({Key? key, required this.journeyId, required this.date, required this.time, required this.routeId, required this.driverId, required this.routeName}) : super(key: key);
+  Function onSubmittedReport;
+
+  ReportView({Key? key, required this.journeyId, required this.date, required this.time, required this.routeId, required this.driverId, required this.routeName, required this.onSubmittedReport}) : super(key: key);
 
   @override
   State<ReportView> createState() => _ReportViewState();
@@ -24,14 +26,19 @@ class _ReportViewState extends State<ReportView> {
   final formKey = GlobalKey<FormState>();
 
   String dropdownValue = "";
-  List items = ["Traffic Issues", "Shuttle Maintenance", "Others"];
+  List items = ["Accident", "Traffic Issues", "Shuttle Maintenance", "Others"];
 
   ReportVM reportVM = ReportVM();
   JourneyVM journeyVM = JourneyVM();
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     dropdownValue = items[0];
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
           toolbarHeight: 75,
@@ -128,7 +135,8 @@ class _ReportViewState extends State<ReportView> {
                                     }),
 
 
-                                    content.text = ""
+                                    content.text = "",
+                                    widget.onSubmittedReport()
                                   })
                                   .catchError((error)=>{
                                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(

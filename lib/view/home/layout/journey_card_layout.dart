@@ -42,11 +42,12 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   var timer;
   bool isJourneyStopped = false;
   LatLng shuttleLocation = LatLng(0.0, 0.0);
+  LatLng defaultSchoolLocation = LatLng(5.3416, 100.2819);
+  //LatLng defaultSchoolLocation = LatLng(5.3180, 100.2697);
 
 
   @override
   Widget build(BuildContext context) {
-
     return Padding(
         padding: EdgeInsets.all(25.0),
         child:  Container(
@@ -119,10 +120,6 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                       }),
                                       isJourneyStopped = false,
                                       runLocationTimer(),
-                                      setState(() {
-                                        widget.onJourneyPressed();
-                                      })
-
                                     },
                                     child: const Text("Yes, I'm sure"),
                                   ),
@@ -160,7 +157,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName),
+                                builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: ()=>{},),
                               ),
                             ).then((value) => {
                               refreshState()
@@ -211,38 +208,74 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                         elevation: 0,
                       ),
                       onPressed: () async {
-                        showDialog<String>(
-                          context: context,
-                          builder: (BuildContext context) => AlertDialog(
-                            title: const Text('End Journey?'),
-                            content: const Text("This will stop real time updates and mark this journey as complete."),
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, 'Cancel'),
-                                child: const Text('Cancel'),
+                        var proximityThreshold = 1000.0;
+                        determinePosition().then((value) => {
+                          distanceCalculation(defaultSchoolLocation.latitude, defaultSchoolLocation.longitude, value.latitude, value.longitude).then((result) => {
+                            if(result <= proximityThreshold){
+                              showDialog<String>(
+                                context: context,
+                                builder: (BuildContext context) => AlertDialog(
+                                  title: const Text('End journey?'),
+                                  content: const Text("This will stop real time updates and mark this journey as complete."),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, 'Cancel'),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async => {
+                                        Navigator.of(context).pop(),
+
+                                        isJourneyStopped = true,
+                                        await journeyVM.endJourney(widget.journeyId, widget.bookingDate, widget.bookingTime, widget.routeId).then((value) async => {}),
+
+                                        await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
+                                          journeyVM.updateStudentNoShow(value).then((value) => {})
+                                        }),
+                                        setState(() {
+                                          widget.onJourneyPressed();
+                                        })
+
+                                      },
+                                      child: const Text("Yes, I'm sure"),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              TextButton(
-                                onPressed: () async => {
-                                  Navigator.of(context).pop(),
-
-                                  isJourneyStopped = true,
-                                  await journeyVM.endJourney(widget.journeyId, widget.bookingDate, widget.bookingTime, widget.routeId).then((value) async => {
-
-                                  }),
-                                  
-                                  await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
-                                    journeyVM.updateStudentNoShow(value).then((value) => {})
-                                  }),
-                                  setState(() {
-                                    widget.onJourneyPressed();
-                                  })
-
-                                },
-                                child: const Text("Yes, I'm sure"),
+                            }
+                            else{
+                              showDialog<String>(
+                                context: context,
+                                builder: (BuildContext context) => AlertDialog(
+                                  title: const Text('End journey early?'),
+                                  content: const Text("You seem to be ending your journey too early. Proceed?"),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, 'Cancel'),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async => {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: () => {
+                                              isJourneyStopped = true,
+                                              Navigator.pop(context)
+                                            },),
+                                          ),
+                                          ).then((value) => {
+                                            refreshState()
+                                          }),
+                                      },
+                                      child: const Text("Yes, I'm sure"),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        );
+                            }
+                          })
+                        });
                       },
                     ),
                   )
@@ -256,14 +289,16 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
 
   runLocationTimer() {
     timer = Timer.periodic(Duration(seconds: 10), (timer) {
-      print(isJourneyStopped);
+      refreshState();
       if(isJourneyStopped){
         stopLocationTimer();
       }
       else{
         determinePosition().then((value) => {
           shuttleLocation = LatLng(value.latitude, value.longitude),
-          journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {})
+          journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
+
+          }),
         });
       }
 
@@ -311,9 +346,15 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
     return await Geolocator.getCurrentPosition();
   }
 
+  Future<double> distanceCalculation(schoolLat, schoolLong, driverLat, driverLong) async {
+    return await Geolocator.distanceBetween(schoolLat, schoolLong, driverLat, driverLong);
+  }
+
   refreshState(){
-    setState(() {
-      widget.onJourneyPressed();
-    });
+    if(mounted){
+      setState(() {
+        widget.onJourneyPressed();
+      });
+    }
   }
 }

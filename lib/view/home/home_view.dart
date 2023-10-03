@@ -55,7 +55,8 @@ class _HomeViewState extends State<HomeView> {
                       itemCount:  snapshot.data?.docs.length,
                       itemBuilder: (context, index) {
                         return JourneyCardLayout(driverId: journeyData[index]["driverId"], routeName: journeyData[index]["routeName"], pickupDropoff: journeyData[index]["pickupDropoff"], bookingTime: journeyData[index]["time"], bookingDate: journeyData[index]["date"], journeyId: journeyData[index]["id"], isJourneyStarted: journeyData[index]["is_journey_started"], onJourneyPressed: () {
-                          setState(() {});
+                          setState(() {
+                          });
                         }, allLocationPoints: journeyData[index]["booking_locations"], routeId: journeyData[index]["routeId"],);
                       }
                   );

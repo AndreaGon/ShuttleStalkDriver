@@ -122,12 +122,9 @@ class _ReportViewState extends State<ReportView> {
                                 onPressed: () => {
 
                                   reportVM.createNotification(dropdownValue, content.text, widget.driverId, widget.routeName).then((value) async => {
+                                    Navigator.pop(context),
                                     journeyVM.endJourney(widget.journeyId, widget.date, widget.time, widget.routeId).then((value) => {
-                                      Navigator.pop(context, 'Yes'),
                                       Navigator.pop(context),
-                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                        content: Text("Successfully cancelled journey and notiifed students and admins"),
-                                      )),
                                     }),
 
                                     reportVM.sendCancellationNotification(widget.date, widget.time, widget.routeName, dropdownValue).then((value) => {

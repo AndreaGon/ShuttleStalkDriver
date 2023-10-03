@@ -40,7 +40,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   bool showEndJourney = false;
 
   var timer;
-  bool isJourneyStopped = false;
+  bool isJourneyStopped = true;
   LatLng shuttleLocation = LatLng(0.0, 0.0);
   LatLng defaultSchoolLocation = LatLng(5.3416, 100.2819);
   //LatLng defaultSchoolLocation = LatLng(5.3180, 100.2697);
@@ -119,6 +119,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                         })
                                       }),
                                       isJourneyStopped = false,
+                                      refreshState(),
                                       runLocationTimer(),
                                     },
                                     child: const Text("Yes, I'm sure"),
@@ -154,14 +155,34 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                             elevation: 0,
                           ),
                           onPressed: () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: ()=>{},),
+                            showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                title: const Text('Cancel journey?'),
+                                content: const Text("This will cancel your current journey and open reporting."),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async => {
+                                      Navigator.of(context).pop(),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: ()=>{},),
+                                        ),
+                                      ).then((value) => {
+                                        refreshState()
+                                      }),
+
+                                    },
+                                    child: const Text("Yes, I'm sure"),
+                                  ),
+                                ],
                               ),
-                            ).then((value) => {
-                              refreshState()
-                            });
+                            );
                           },
                         ),
                       )
@@ -232,10 +253,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                         await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
                                           journeyVM.updateStudentNoShow(value).then((value) => {})
                                         }),
-                                        setState(() {
-                                          widget.onJourneyPressed();
-                                        })
-
+                                        refreshState()
                                       },
                                       child: const Text("Yes, I'm sure"),
                                     ),
@@ -256,12 +274,16 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                     ),
                                     TextButton(
                                       onPressed: () async => {
+                                        Navigator.pop(context),
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: () => {
                                               isJourneyStopped = true,
-                                              Navigator.pop(context)
+                                              Navigator.pop(context),
+                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                                content: Text("Successfully cancelled journey and notiifed students and admins"),
+                                              )),
                                             },),
                                           ),
                                           ).then((value) => {
@@ -289,7 +311,6 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
 
   runLocationTimer() {
     timer = Timer.periodic(Duration(seconds: 10), (timer) {
-      refreshState();
       if(isJourneyStopped){
         stopLocationTimer();
       }
@@ -301,6 +322,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
           }),
         });
       }
+      refreshState();
 
     });
   }

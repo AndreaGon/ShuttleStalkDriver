@@ -109,18 +109,20 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                     child: const Text('Cancel'),
                                   ),
                                   TextButton(
-                                    onPressed: () async => {
+                                    onPressed: () => {
                                       Navigator.of(context).pop(),
-
-                                      await journeyVM.updateStartJourney(widget.journeyId, true).then((value) => {
-                                        determinePosition().then((value) => {
-                                          shuttleLocation = LatLng(value.latitude, value.longitude),
-                                          journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {})
-                                        })
+                                      determinePosition().then((value) async => {
+                                        await journeyVM.updateStartJourney(widget.journeyId, true).then((value) => {}),
+                                        shuttleLocation = LatLng(value.latitude, value.longitude),
+                                        journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {}),
+                                        isJourneyStopped = false,
+                                        refreshState(),
+                                        runLocationTimer(),
+                                      }).catchError((onError)=>{
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                          content: Text("Please turn on your location!"),
+                                        ))
                                       }),
-                                      isJourneyStopped = false,
-                                      refreshState(),
-                                      runLocationTimer(),
                                     },
                                     child: const Text("Yes, I'm sure"),
                                   ),
@@ -229,7 +231,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                         elevation: 0,
                       ),
                       onPressed: () async {
-                        var proximityThreshold = 1000.0;
+                        var proximityThreshold = 20.0;
                         determinePosition().then((value) => {
                           distanceCalculation(defaultSchoolLocation.latitude, defaultSchoolLocation.longitude, value.latitude, value.longitude).then((result) => {
                             if(result <= proximityThreshold){
@@ -310,16 +312,40 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   }
 
   runLocationTimer() {
-    timer = Timer.periodic(Duration(seconds: 10), (timer) {
+    timer = Timer.periodic(Duration(seconds: 2), (timer) {
+      // if(isJourneyStopped){
+      //   stopLocationTimer();
+      // }
+      // else{
+      //   determinePosition().then((value) => {
+      //     shuttleLocation = LatLng(value.latitude, value.longitude),
+      //     journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
+      //
+      //     }),
+      //   });
+      // }
+      var proximityThreshold = 20.0;
       if(isJourneyStopped){
         stopLocationTimer();
       }
       else{
-        determinePosition().then((value) => {
-          shuttleLocation = LatLng(value.latitude, value.longitude),
-          journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
+        determinePosition().then((currentPosition)=>{
+          distanceCalculation(shuttleLocation.latitude, shuttleLocation.longitude, currentPosition.latitude, currentPosition.longitude).then((value) => {
+            if(value >= proximityThreshold){
+              shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
+              journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
 
-          }),
+              }),
+              print("UPDATE FIREBASE " + value.toString())
+            }
+            else{
+              print("DONT UPDATE FIREBASE " + value.toString())
+            }
+          })
+        }).catchError((onError)=>{
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Please turn on your location!"),
+          ))
         });
       }
       refreshState();

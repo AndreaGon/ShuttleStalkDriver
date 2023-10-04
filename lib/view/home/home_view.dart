@@ -39,8 +39,8 @@ class _HomeViewState extends State<HomeView> {
             var driverData;
             driverData = snapshot.data?.docs.map((DocumentSnapshot doc) => doc.data() as Map<String, dynamic>).toList();
 
-            return FutureBuilder(
-              future: journeyVM.getJourneys(driverData[0]["id"]),
+            return StreamBuilder(
+              stream: journeyVM.getJourneys(driverData[0]["id"]),
               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
 
                 if(!snapshot.hasData) {

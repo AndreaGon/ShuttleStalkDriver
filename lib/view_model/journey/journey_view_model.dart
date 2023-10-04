@@ -15,15 +15,15 @@ class JourneyVM {
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future getJourneys(String driverId) async{
+  Stream getJourneys(String driverId) {
     DateTime today = DateTime.now();
     String dateStr = today.toString().substring(0, 10);
     print("Date: " + dateStr);
-    QuerySnapshot querySnapshot = await locationRef
+    Stream<QuerySnapshot> querySnapshot = locationRef
         .where('driverId', isEqualTo: driverId)
         .where('is_journey_finished', isEqualTo: false)
         .where('date', isEqualTo: dateStr)
-        .get();
+        .snapshots();
 
     return querySnapshot;
   }

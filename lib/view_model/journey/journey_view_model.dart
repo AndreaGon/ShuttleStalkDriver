@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 
 class JourneyVM {
 
-  CollectionReference locationRef = FirebaseFirestore.instance.collection('locations');
+  CollectionReference locationRef = FirebaseFirestore.instance.collection('journeys');
   CollectionReference bookingRef = FirebaseFirestore.instance.collection('bookings');
 
   final FirebaseFirestore firestore = FirebaseFirestore.instance;

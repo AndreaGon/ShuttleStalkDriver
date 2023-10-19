@@ -45,6 +45,53 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   LatLng defaultSchoolLocation = LatLng(5.3416, 100.2819);
   //LatLng defaultSchoolLocation = LatLng(5.3180, 100.2697);
 
+  void initState() {
+    super.initState();
+
+    if(widget.isJourneyStarted){
+      journeyVM.getStartedJourneys(widget.driverId).then((value) => {
+        if(value.docs.length == 0){
+          showDialog<String>(
+            context: context,
+            builder: (BuildContext context) => AlertDialog(
+              title: const Text('Start Journey?'),
+              content: const Text("This will start your journey and send your real time location to the students."),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'Cancel'),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => {
+                    Navigator.of(context).pop(),
+                    determinePosition().then((currentPosition) async => {
+                      await journeyVM.updateStartJourney(widget.journeyId, true).then((value) => {}),
+                      shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
+                      journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {}),
+                      isJourneyStopped = false,
+                      refreshState(),
+                      runLocationTimer(),
+                    }).catchError((onError)=>{
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Please turn on your location!"),
+                      ))
+                    }),
+                  },
+                  child: const Text("Yes, I'm sure"),
+                ),
+              ],
+            ),
+          )
+        }
+        else{
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("You cannot start another journey without ending your previous journey!"),
+          ))
+        }
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -111,9 +158,9 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                   TextButton(
                                     onPressed: () => {
                                       Navigator.of(context).pop(),
-                                      determinePosition().then((value) async => {
+                                      determinePosition().then((currentPosition) async => {
                                         await journeyVM.updateStartJourney(widget.journeyId, true).then((value) => {}),
-                                        shuttleLocation = LatLng(value.latitude, value.longitude),
+                                        shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
                                         journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {}),
                                         isJourneyStopped = false,
                                         refreshState(),
@@ -231,74 +278,74 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                         elevation: 0,
                       ),
                       onPressed: () async {
-                        var proximityThreshold = 20.0;
+                        var proximityThreshold = 200.0;
+                        var currDistance;
                         determinePosition().then((value) => {
-                          distanceCalculation(defaultSchoolLocation.latitude, defaultSchoolLocation.longitude, value.latitude, value.longitude).then((result) => {
-                            if(result <= proximityThreshold){
-                              showDialog<String>(
-                                context: context,
-                                builder: (BuildContext context) => AlertDialog(
-                                  title: const Text('End journey?'),
-                                  content: const Text("This will stop real time updates and mark this journey as complete."),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, 'Cancel'),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () async => {
-                                        Navigator.of(context).pop(),
+                          currDistance = distanceCalculation(defaultSchoolLocation.latitude, defaultSchoolLocation.longitude, value.latitude, value.longitude),
+                          if(currDistance <= proximityThreshold){
+                            showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                title: const Text('End journey?'),
+                                content: const Text("This will stop real time updates and mark this journey as complete."),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async => {
+                                      Navigator.of(context).pop(),
 
-                                        isJourneyStopped = true,
-                                        await journeyVM.endJourney(widget.journeyId, widget.bookingDate, widget.bookingTime, widget.routeId).then((value) async => {}),
+                                      isJourneyStopped = true,
+                                      await journeyVM.endJourney(widget.journeyId, widget.bookingDate, widget.bookingTime, widget.routeId).then((value) async => {}),
 
-                                        await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
-                                          journeyVM.updateStudentNoShow(value).then((value) => {})
-                                        }),
+                                      await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
+                                        journeyVM.updateStudentNoShow(value).then((value) => {})
+                                      }),
+                                      refreshState()
+                                    },
+                                    child: const Text("Yes, I'm sure"),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          }
+                          else{
+                            showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => AlertDialog(
+                                title: const Text('End journey early?'),
+                                content: const Text("You seem to be ending your journey too early. Proceed?"),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async => {
+                                      Navigator.pop(context),
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: () => {
+                                            isJourneyStopped = true,
+                                            Navigator.pop(context),
+                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                              content: Text("Successfully cancelled journey and notiifed students and admins"),
+                                            )),
+                                          },),
+                                        ),
+                                      ).then((value) => {
                                         refreshState()
-                                      },
-                                      child: const Text("Yes, I'm sure"),
-                                    ),
-                                  ],
-                                ),
+                                      }),
+                                    },
+                                    child: const Text("Yes, I'm sure"),
+                                  ),
+                                ],
                               ),
-                            }
-                            else{
-                              showDialog<String>(
-                                context: context,
-                                builder: (BuildContext context) => AlertDialog(
-                                  title: const Text('End journey early?'),
-                                  content: const Text("You seem to be ending your journey too early. Proceed?"),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, 'Cancel'),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () async => {
-                                        Navigator.pop(context),
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ReportView(journeyId: widget.journeyId, date: widget.bookingDate, time: widget.bookingTime, routeId: widget.routeId, driverId: widget.driverId, routeName: widget.routeName, onSubmittedReport: () => {
-                                              isJourneyStopped = true,
-                                              Navigator.pop(context),
-                                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                                content: Text("Successfully cancelled journey and notiifed students and admins"),
-                                              )),
-                                            },),
-                                          ),
-                                          ).then((value) => {
-                                            refreshState()
-                                          }),
-                                      },
-                                      child: const Text("Yes, I'm sure"),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            }
-                          })
+                            ),
+                          }
                         });
                       },
                     ),
@@ -312,6 +359,7 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   }
 
   runLocationTimer() {
+    var currDistance;
     timer = Timer.periodic(Duration(seconds: 2), (timer) {
       // if(isJourneyStopped){
       //   stopLocationTimer();
@@ -324,24 +372,31 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
       //     }),
       //   });
       // }
-      var proximityThreshold = 20.0;
+      var proximityThreshold = 200.0;
       if(isJourneyStopped){
         stopLocationTimer();
       }
       else{
-        determinePosition().then((currentPosition)=>{
-          distanceCalculation(shuttleLocation.latitude, shuttleLocation.longitude, currentPosition.latitude, currentPosition.longitude).then((value) => {
-            if(value >= proximityThreshold){
-              shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
-              journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
 
-              }),
-              print("UPDATE FIREBASE " + value.toString())
-            }
-            else{
-              print("DONT UPDATE FIREBASE " + value.toString())
-            }
-          })
+        determinePosition().then((currentPosition)=>{
+          //print("LOCATION " + shuttleLocation.toString()),
+          print("CURRENT " + currentPosition.toString()),
+
+          currDistance = distanceCalculation(shuttleLocation.latitude, shuttleLocation.longitude, currentPosition.latitude, currentPosition.longitude),
+          print("CURRENT DISTANCE: " + currDistance.toString()),
+
+          if(currDistance >= proximityThreshold){
+            shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
+            journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
+
+            }),
+            shuttleLocation = LatLng(currentPosition.latitude, currentPosition.longitude),
+            print("UPDATE FIREBASE " + currDistance.toString())
+          }
+          else{
+            print("DONT UPDATE FIREBASE " + currDistance.toString())
+          },
+
         }).catchError((onError)=>{
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text("Please turn on your location!"),
@@ -394,8 +449,8 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
     return await Geolocator.getCurrentPosition();
   }
 
-  Future<double> distanceCalculation(schoolLat, schoolLong, driverLat, driverLong) async {
-    return await Geolocator.distanceBetween(schoolLat, schoolLong, driverLat, driverLong);
+  double distanceCalculation(schoolLat, schoolLong, driverLat, driverLong) {
+    return Geolocator.distanceBetween(schoolLat, schoolLong, driverLat, driverLong);
   }
 
   refreshState(){

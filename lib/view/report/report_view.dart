@@ -120,11 +120,12 @@ class _ReportViewState extends State<ReportView> {
                               ),
                               TextButton(
                                 onPressed: () => {
-
+                                  Navigator.pop(context),
+                                  Navigator.pop(context),
                                   reportVM.createNotification(dropdownValue, content.text, widget.driverId, widget.routeName).then((value) async => {
-                                    Navigator.pop(context),
+
                                     journeyVM.endJourney(widget.journeyId, widget.date, widget.time, widget.routeId).then((value) => {
-                                      Navigator.pop(context),
+                                      //Navigator.pop(context),
                                     }),
 
                                     reportVM.sendCancellationNotification(widget.date, widget.time, widget.routeName, dropdownValue).then((value) => {

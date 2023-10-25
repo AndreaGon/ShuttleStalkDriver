@@ -143,6 +143,8 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                         elevation: 0,
                       ),
                       onPressed: () async {
+                        print("DATE " + widget.bookingDate);
+                        print("TIME " + widget.bookingTime);
                         journeyVM.getStartedJourneys(widget.driverId).then((value) => {
                           if(value.docs.length == 0){
                             showDialog<String>(
@@ -280,6 +282,8 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                       onPressed: () async {
                         var proximityThreshold = 200.0;
                         var currDistance;
+                        var date;
+                        var time;
                         determinePosition().then((value) => {
                           currDistance = distanceCalculation(defaultSchoolLocation.latitude, defaultSchoolLocation.longitude, value.latitude, value.longitude),
                           if(currDistance <= proximityThreshold){
@@ -298,9 +302,12 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
                                       Navigator.of(context).pop(),
 
                                       isJourneyStopped = true,
-                                      await journeyVM.endJourney(widget.journeyId, widget.bookingDate, widget.bookingTime, widget.routeId).then((value) async => {}),
+                                      date = widget.bookingDate,
+                                      time = widget.bookingTime,
 
-                                      await journeyVM.getStudentIdsFromBooking(widget.bookingDate, widget.bookingTime, widget.routeId).then((value) => {
+                                      await journeyVM.endJourney(widget.journeyId, date, time, widget.routeId).then((value) async => {}),
+
+                                      await journeyVM.getStudentIdsFromBooking(date, time, widget.routeId).then((value) => {
                                         journeyVM.updateStudentNoShow(value).then((value) => {})
                                       }),
                                       refreshState()
@@ -361,23 +368,12 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
   runLocationTimer() {
     var currDistance;
     timer = Timer.periodic(Duration(seconds: 2), (timer) {
-      // if(isJourneyStopped){
-      //   stopLocationTimer();
-      // }
-      // else{
-      //   determinePosition().then((value) => {
-      //     shuttleLocation = LatLng(value.latitude, value.longitude),
-      //     journeyVM.updateDriverLocation(widget.journeyId, shuttleLocation).then((value) => {
-      //
-      //     }),
-      //   });
-      // }
+
       var proximityThreshold = 200.0;
       if(isJourneyStopped){
         stopLocationTimer();
       }
       else{
-
         determinePosition().then((currentPosition)=>{
           //print("LOCATION " + shuttleLocation.toString()),
           print("CURRENT " + currentPosition.toString()),
@@ -419,9 +415,6 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
       return Future.error('Location services are disabled.');
     }
 
@@ -429,11 +422,6 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
         return Future.error('Location permissions are denied');
       }
     }
@@ -443,9 +431,6 @@ class _JourneyCardLayoutState extends State<JourneyCardLayout> {
       return Future.error(
           'Location permissions are permanently denied, we cannot request permissions.');
     }
-
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
   }
 

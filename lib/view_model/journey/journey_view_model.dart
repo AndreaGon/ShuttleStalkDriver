@@ -77,7 +77,7 @@ class JourneyVM {
   }
 
   Future getStudentIdsFromBooking(String date, String time, String routeId) async {
-    final bookings = await bookingRef
+    QuerySnapshot bookings = await bookingRef
         .where('date', isEqualTo: date)
         .where('time', isEqualTo: time)
         .where('routeId', isEqualTo: routeId)
@@ -88,7 +88,11 @@ class JourneyVM {
 
     for(final booking in bookings.docs) {
       studentIds.add(booking["studentId"]);
+      print("STUDENT BOOKINGS " + booking.data().toString());
     }
+
+
+    print("STUDENT IDS " + studentIds.toString());
 
     return studentIds;
   }

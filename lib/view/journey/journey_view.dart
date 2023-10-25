@@ -62,7 +62,6 @@ class _JourneyViewState extends State<JourneyView> {
               onMapCreated: (mapController) {
                 _controller.complete(mapController);
               },
-              //polylines: Set<Polyline>.of(polylines.values),
             )
 
           ],

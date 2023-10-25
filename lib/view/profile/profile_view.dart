@@ -63,7 +63,7 @@ class _ProfileViewState extends State<ProfileView> {
                       controller: password,
                       decoration: const InputDecoration(
                           labelText: 'Password',
-                          filled: true, //<-- SEE HERE
+                          filled: true,
                           fillColor: Color(0xFFD2D2D2)
                       )
                   ),
@@ -72,7 +72,7 @@ class _ProfileViewState extends State<ProfileView> {
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       primary: lightblue,
-                      minimumSize: Size.fromHeight(40), // fromHeight use double.infinity as width and 40 is the height
+                      minimumSize: Size.fromHeight(40),
                     ),
                     onPressed: () {
                       showDialog<String>(
